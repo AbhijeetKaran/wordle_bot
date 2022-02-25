@@ -8,7 +8,6 @@ class WordList:
     def __init__(self,filename,n):
         self.wordlist = self.__importWordList(filename,n)
         self.wordmatrix = self.__loadMatrix()
-        self.wordScore = self.__wordScorer()
 
     def __loadMatrix(self):
         sample = []
@@ -24,95 +23,87 @@ class WordList:
         wordlist = np.loadtxt(wordlist,dtype=nf)
         return wordlist
 
-    def __wordScorer(self):
-        info = iscoreLoader()
-        vowels = ['a','e','i','o','u']
-        scores = []
-        for x in self.wordlist:
-            s = 0
-            for i in x:
-                if i in vowels:
-                    s = s+5
-                i=i.upper()
-                s = s+info[i]
-            scores.append(s)
-        return np.array(scores)
-
     def filtering(self,lc,ac,wl,wm):
         condition = (wm[:,lc] == ac)
         filt = np.where(condition)
         return wl[filt],wm[filt,:][0]
 
-    def deepfiltering(self,ma,wl,wm):
+    def deepfiltering(self,ma,ml,wl,wm,cl):
         a1 = np.array([0,1,2,3,4])
-        mj = np.isin(wm,ma)
-        filt = np.where(np.any(mj, axis=1))
-        if len(filt) == 0:
-            return wl,wm
-        else:
-            return wl[filt],wm[filt,:][0]
+        # in word filter
+        for y in ma:
+            cj = np.isin(wm,y)
+            filt = np.where(np.any(cj, axis=1))
+            if len(filt) == 0:
+                continue
+            wl = wl[filt]
+            wm = wm[filt,:][0]
+        # # out word filter
+        cj = np.isin(wm,ma,invert=True)
+        filt = np.where(np.any(cj, axis=1))
+        if len(filt) != 0:    
+            wl = wl[filt]
+            wm = wm[filt,:][0]
+        for z in range(0,len(ma)):
+            condition = (wm[:,ml[z]] != ma[z]) 
+            filt1 = np.where(condition)
+            if len(filt1) == 0:
+                continue
+            wl = wl[filt1]
+            wm = wm[filt1,:][0]
+        return wl,wm
 
     def randomSelector(self,wl):
         rnd_ch = np.random.choice(wl,1)
         return rnd_ch
 
-    def highScoreSelector(self,wl,sl):
-        max_scorer_i = np.argmax(sl)
-        if isinstance(max_scorer_i, list):
-            rnd_ch = np.random.choice(list(wl[max_scorer_i]),1)
-        else:
-            rnd_ch = wl[max_scorer_i]
-        return rnd_ch
-
-    # def probScoreSelector(self,wl,sl):
-
     def gameplay(self,original):
         wl = self.wordlist
         wm = self.wordmatrix
-        sl = self.wordScore
         nset = [x for x in range(0,5)]
         nset = set(nset)
         trials = 1
         sucess = False
         ma = []
+        ml = []
         ca = []
         cl = []
         while True:
             predicted = list(self.randomSelector(wl))[0]
-            # predicted = self.highScoreSelector(wl,sl)
-            sucess,ma,ca,cl = word_check(original,predicted,ma,ca,cl)
+            sucess,ma,ml,ca,cl = word_check(original,predicted,ma,ml,ca,cl)
             if sucess == True:
                 break
             else:
-                # if len(ca) == 0 or len(ma) > 0:
-                #     wl,sl = removeThisWord(predicted,wl,sl)
                 for x in range(0,len(ca)):
                     wl,wm = self.filtering(cl[x],ca[x],wl,wm)
                 nset = nset.difference(set(cl))
                 if len(ma) > 0:
-                    wl,wm = self.deepfiltering(ma,wl,wm)
+                    wl,wm = self.deepfiltering(ma,ml,wl,wm,cl)
                     ma=[]
+                    ml=[]
                 trials = trials + 1
+                wl,wm = removeThisWord(predicted,wl,wm)
         if sucess == True:
             print(f"You guessed it in {trials} trials")
         else:
             print("you failed")
 
-def removeThisWord(pred,wl,sl):
+def removeThisWord(pred,wl,wm):
     ind = np.where(wl == pred)
     wl = np.delete(wl,ind)
-    sl = np.delete(sl,ind)
-    return wl,sl
+    wm = np.delete(wm,ind,axis=0)
+    return wl,wm
             
-def word_check(x,y,ma,ca,cl):
+def word_check(x,y,ma,ml,ca,cl):
     success_rate = 0
     for i in range(0,len(x)):
         ins = False
         pos = False
         if y[i] in x:
             ins = True
-            if y[i] not in ma:
-                ma.append(y[i]) 
+            if y[i] != x[i]:
+                ma.append(y[i])
+                ml.append(i) 
         if y[i] == x[i]:
             pos = True
             ca.append(y[i])
@@ -126,16 +117,8 @@ def word_check(x,y,ma,ca,cl):
             print(f"\033[1;40m'{y[i]}'\033[0m",end="")
     print()
     if success_rate == len(x):
-        return True,ma,ca,cl
-    return False,ma,ca,cl
-
-def iscoreLoader():
-        alphascores = pd.read_csv("alpha.tsv",sep="\t",header=None)
-        scoreCard = {}
-        for rw in alphascores.itertuples(index=False):
-            scoreCard[rw[0]] = float(rw[2])
-        return scoreCard
-
+        return True,ma,ml,ca,cl
+    return False,ma,ml,ca,cl
 
 
 #<<Body>> 
@@ -143,7 +126,7 @@ def iscoreLoader():
 #Algorithm applied in this is without information theory and probablity.
 #Hence the answer found is by randomly picking from the filtered set
 
-s1 = "caulk"
+s1 = "robot"
 n = int(sys.argv[1])
 wl = WordList("words5.txt",n)
 wl.gameplay(s1)
