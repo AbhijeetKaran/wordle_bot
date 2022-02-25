@@ -130,6 +130,6 @@ s1 = "robot"
 n = int(sys.argv[1])
 wl = WordList("words5.txt",n)
 wl.gameplay(s1)
-
+#this is the second trial
 # getting 5 letter words from dictionary
 # perl -nle 'print if /^[a-z]{5}$/' /usr/share/dict/words > words5.tx
