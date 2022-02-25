@@ -8,6 +8,12 @@ class WordList:
     def __init__(self,filename,n):
         self.wordlist = self.__importWordList(filename,n)
         self.wordmatrix = self.__loadMatrix()
+        self.topChar = [x.lower() for x in self.__loadTopChar()]
+
+    def __loadTopChar(self):
+        edata = pd.read_csv("alpha.tsv",sep="\t",header=None)
+        elist = list(edata[0])
+        return elist
 
     def __loadMatrix(self):
         sample = []
@@ -56,10 +62,18 @@ class WordList:
     def randomSelector(self,wl):
         rnd_ch = np.random.choice(wl,1)
         return rnd_ch
+    
+    def randomFirstSelector(self,wm,wl,sl):
+        score = []
+        ax = np.isin(wm,sl)
+        asx = ax.sum(axis=1)
+        axi = np.amax(asx)
+        return wl[axi]
 
     def gameplay(self,original):
         wl = self.wordlist
         wm = self.wordmatrix
+        sl = self.topChar[:10]
         nset = [x for x in range(0,5)]
         nset = set(nset)
         trials = 1
@@ -69,7 +83,10 @@ class WordList:
         ca = []
         cl = []
         while True:
-            predicted = list(self.randomSelector(wl))[0]
+            if trials > 1:
+                predicted = list(self.randomSelector(wl))[0]
+            else:
+                predicted = self.randomFirstSelector(wm,wl,sl)
             sucess,ma,ml,ca,cl = word_check(original,predicted,ma,ml,ca,cl)
             if sucess == True:
                 break
@@ -126,10 +143,11 @@ def word_check(x,y,ma,ml,ca,cl):
 #Algorithm applied in this is without information theory and probablity.
 #Hence the answer found is by randomly picking from the filtered set
 
-s1 = "robot"
+s1 = "knoll"
 n = int(sys.argv[1])
 wl = WordList("words5.txt",n)
 wl.gameplay(s1)
+
 #this is the second trial
 # getting 5 letter words from dictionary
 # perl -nle 'print if /^[a-z]{5}$/' /usr/share/dict/words > words5.tx
