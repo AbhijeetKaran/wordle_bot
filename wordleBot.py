@@ -41,8 +41,8 @@ class WordList:
 
     def deepfiltering(self,ma,ml,wl,wm,cl):
         # a1 = np.array([0,1,2,3,4])
-        ## FILTER ONE ## "words which all contains the alphabets"
         # if len(ma) != 5:
+        ## FILTER ONE ## "words which all contains the alphabets"
         for y in ma:
             cj = np.isin(wm,y)
             filt = np.where(np.any(cj, axis=1))
@@ -51,22 +51,19 @@ class WordList:
             wl = wl[filt]
             wm = wm[filt,:][0]
         
-        ## FILTER TWO ## ""
+        ## FILTER TWO ## "words which all contains the absolute alphabets at non-absolute location"
         if len(ma) == 5 or len(wl) <= 2:
             return wl,wm
 
         cj = np.isin(wm,ma,invert=True)
         cjt = np.invert(cj)
         filt = np.where(np.any(cjt, axis=1))
-        # filt = np.where(np.any(cj, axis=1))
-        # print(cj)
-        # print(filt)
         if len(filt) != 0:    
             wl = wl[filt]
             wm = wm[filt,:][0]
         # print(f"2 ma:{len(ma)} wl:{len(wl)} {wl}")
         
-        ## FILTER THREE ##
+        ## FILTER THREE ## "words which all contains the alphabets at non-absolute location"
         for z in range(0,len(ma)):
             condition = (wm[:,ml[z]] != ma[z]) 
             filt1 = np.where(condition)
@@ -88,11 +85,11 @@ class WordList:
         nset = set(nset)
         trials = 1
         sucess = False
-        ma = []
-        ml = []
-        ca = []
-        cl = []
-        nal = []
+        ma = [] #present alphabets
+        ml = [] #present alphabets non-locations
+        ca = [] #confirm alphabets
+        cl = [] #confirm location
+        nal = [] #confirm non alphabets
         while True:
             predicted = list(self.randomSelector(wl))[0]
             sucess,ma,ml,ca,cl,nal = word_check(original,predicted,ma,ml,ca,cl,nal)
@@ -134,13 +131,17 @@ def word_check(x,y,ma,ml,ca,cl,nal):
             if y[i] != x[i]:
                 ma.append(y[i])
                 ml.append(i)
+            else:
+                pos = True
+                ca.append(y[i])
+                cl.append(i)
         else:
             nal.append(y[i])
 
-        if y[i] == x[i]:
-            pos = True
-            ca.append(y[i])
-            cl.append(i)
+        # if y[i] == x[i]:
+        #     pos = True
+        #     ca.append(y[i])
+        #     cl.append(i)
         if ins == True and pos == True:
             print(f"\033[1;42m'{y[i]}'\033[0m",end="")
             success_rate = success_rate + 1
