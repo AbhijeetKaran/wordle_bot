@@ -23,14 +23,24 @@ class WordList:
         wordlist = np.loadtxt(wordlist,dtype=nf)
         return wordlist
 
+
     def filtering(self,lc,ac,wl,wm):
         condition = (wm[:,lc] == ac)
         filt = np.where(condition)
         return wl[filt],wm[filt,:][0]
 
+
+    def deepfilteringExclude(self,nal,wl,wm):
+        mcj = np.isin(wm,nal,invert=True)
+        filt = np.where(np.all(mcj, axis=1))
+        if len(filt) != 0:    
+            wl = wl[filt]
+            wm = wm[filt,:][0]
+        return wl,wm
+
+
+    ## FILTER ONE ## "words which all contains the alphabets"
     def deepfiltering(self,ma,ml,wl,wm,cl):
-        a1 = np.array([0,1,2,3,4])
-        # in word filter
         for y in ma:
             cj = np.isin(wm,y)
             filt = np.where(np.any(cj, axis=1))
@@ -38,12 +48,19 @@ class WordList:
                 continue
             wl = wl[filt]
             wm = wm[filt,:][0]
-        # # out word filter
+        
+        ## FILTER TWO ## "words which all contains the absolute alphabets at non-absolute location"
+        if len(ma) == 5 or len(wl) <= 2:
+            return wl,wm
+
         cj = np.isin(wm,ma,invert=True)
-        filt = np.where(np.any(cj, axis=1))
+        cjt = np.invert(cj)
+        filt = np.where(np.any(cjt, axis=1))
         if len(filt) != 0:    
             wl = wl[filt]
             wm = wm[filt,:][0]
+        
+        ## FILTER THREE ## "words which all contains the alphabets at non-absolute location"
         for z in range(0,len(ma)):
             condition = (wm[:,ml[z]] != ma[z]) 
             filt1 = np.where(condition)
@@ -54,39 +71,114 @@ class WordList:
         return wl,wm
 
     def randomSelector(self,wl):
+        # print(len(wl))
         rnd_ch = np.random.choice(wl,1)
         return rnd_ch
 
+    def check_dup(self,word):
+        i = 0
+        for a in word:
+            i = word.count(a)
+            if i > 1:
+                return False 
+        return True
+
     def gameplay(self,original):
-        wl = self.wordlist
-        wm = self.wordmatrix
+        wl = self.wordlist.copy()
+        wm = self.wordmatrix.copy()
         nset = [x for x in range(0,5)]
         nset = set(nset)
         trials = 1
         sucess = False
-        ma = []
-        ml = []
-        ca = []
-        cl = []
+        ma = [] #present alphabets
+        ml = [] #present alphabets non-locations
+        ca = [] #confirm alphabets
+        cl = [] #confirm location
+        nal = [] #confirm non alphabets
         while True:
-            predicted = list(self.randomSelector(wl))[0]
-            sucess,ma,ml,ca,cl = word_check(original,predicted,ma,ml,ca,cl)
+            if trials == 1:
+                while True: 
+                    predicted = list(self.randomSelector(wl))[0]
+                    if self.check_dup(predicted):
+                        break
+            else:
+                if trials == 2 and len(ma) == 0 and len(ca) == 0:
+                    while True: 
+                        predicted = list(self.randomSelector(wl))[0]
+                        if self.check_dup(predicted):
+                            break
+                else:
+                    predicted = list(self.randomSelector(wl))[0]
+            sucess,ma,ml,ca,cl,nal = word_check(original,predicted,ma,ml,ca,cl,nal)
             if sucess == True:
                 break
             else:
                 for x in range(0,len(ca)):
                     wl,wm = self.filtering(cl[x],ca[x],wl,wm)
                 nset = nset.difference(set(cl))
+                #exclude no alphabet words 
+                if len(nal) > 0:
+                    wl,wm = self.deepfilteringExclude(nal,wl,wm)
+                    nal=[]
+                #exclude no position alphabet words
                 if len(ma) > 0:
                     wl,wm = self.deepfiltering(ma,ml,wl,wm,cl)
                     ma=[]
                     ml=[]
                 trials = trials + 1
                 wl,wm = removeThisWord(predicted,wl,wm)
-        if sucess == True:
-            print(f"You guessed it in {trials} trials")
+        if sucess == True and trials <=6:
+            print(f"\033[1;32m SUCCESS\033[0m {trials}/6\n")
+            return True
         else:
-            print("you failed")
+            print(f"\033[1;31m FAILED\033[0m {trials}/{6}")
+            return False
+    
+    def askInput(self):
+        val = input("\033[1;36m Your guess : \033[0m")
+        return val
+
+    def gameModeplay(self,original):
+        wl = self.wordlist.copy()
+        wm = self.wordmatrix.copy()
+        nset = [x for x in range(0,5)]
+        nset = set(nset)
+        trials = 1
+        sucess = False
+        ma = [] #present alphabets
+        ml = [] #present alphabets non-locations
+        ca = [] #confirm alphabets
+        cl = [] #confirm location
+        nal = [] #confirm non alphabets
+        while True:
+            if trials > 6:
+                break
+            predicted = self.askInput()
+            sucess,ma,ml,ca,cl,nal = word_check(original,predicted,ma,ml,ca,cl,nal)
+            if sucess == True:
+                break
+            else:
+                for x in range(0,len(ca)):
+                    wl,wm = self.filtering(cl[x],ca[x],wl,wm)
+                nset = nset.difference(set(cl))
+                #exclude no alphabet words 
+                if len(nal) > 0:
+                    wl,wm = self.deepfilteringExclude(nal,wl,wm)
+                    nal=[]
+                #exclude no position alphabet words
+                if len(ma) > 0:
+                    wl,wm = self.deepfiltering(ma,ml,wl,wm,cl)
+                    ma=[]
+                    ml=[]
+                trials = trials + 1
+                wl,wm = removeThisWord(predicted,wl,wm)
+        if sucess == True and trials <=6:
+            print(f"\033[1;32m SUCCESS\033[0m {trials}/6\n")
+            return True
+        else:
+            print(f"\033[1;31m FAILED\033[0m {trials}/{6}")
+            print(f"\033[1;45m Correct word : '{original}' \033[0m\n")
+            return False
 
 def removeThisWord(pred,wl,wm):
     ind = np.where(wl == pred)
@@ -94,7 +186,7 @@ def removeThisWord(pred,wl,wm):
     wm = np.delete(wm,ind,axis=0)
     return wl,wm
             
-def word_check(x,y,ma,ml,ca,cl):
+def word_check(x,y,ma,ml,ca,cl,nal):
     success_rate = 0
     for i in range(0,len(x)):
         ins = False
@@ -103,33 +195,49 @@ def word_check(x,y,ma,ml,ca,cl):
             ins = True
             if y[i] != x[i]:
                 ma.append(y[i])
-                ml.append(i) 
-        if y[i] == x[i]:
-            pos = True
-            ca.append(y[i])
-            cl.append(i)
+                ml.append(i)
+            else:
+                pos = True
+                ca.append(y[i])
+                cl.append(i)
+        else:
+            nal.append(y[i])
+
         if ins == True and pos == True:
-            print(f"\033[1;42m'{y[i]}'\033[0m",end="")
+            print(f"\033[1;42m\033[1;97m {y[i]} \033[0m",end="")
             success_rate = success_rate + 1
         elif ins == True and pos == False:
-            print(f"\033[1;43m'{y[i]}'\033[0m",end="")
+            print(f"\033[1;103m\033[1;97m {y[i]} \033[0m",end="")
         else:
-            print(f"\033[1;40m'{y[i]}'\033[0m",end="")
+            print(f"\033[0;47m\033[1;97m {y[i]} \033[0m",end="")
     print()
     if success_rate == len(x):
-        return True,ma,ml,ca,cl
-    return False,ma,ml,ca,cl
+        return True,ma,ml,ca,cl,nal
+    return False,ma,ml,ca,cl,nal
 
 
-#<<Body>> 
-#This is the first trial script. 
-#Algorithm applied in this is without information theory and probablity.
-#Hence the answer found is by randomly picking from the filtered set
 
-s1 = "robot"
+
+#<<Body>>
 n = int(sys.argv[1])
-wl = WordList("words5.txt",n)
-wl.gameplay(s1)
-#this is the second trial
-# getting 5 letter words from dictionary
+mode = int(sys.argv[2])
+total_s = 0
+total_l = 0
+if mode == 1:
+    wl = WordList("allposiblewords.txt",n)
+    fh = open("possible_answers.txt",'r')
+    for x in fh:
+        x = x.strip()
+        result = wl.gameplay(x)
+        if result:
+            total_s = total_s+1
+        else:
+            print(f"\033[1;45m Correct word : '{x}' \033[0m\n")
+            total_l = total_l+1
+    print(f"Total accuracy is: {round((total_s/(total_l+total_s))*100,2)}%")
+else:
+    wl = WordList("possible_answers.txt",n)
+    original = list(wl.randomSelector(wl.wordlist))[0]
+    result = wl.gameModeplay(original)
+
 # perl -nle 'print if /^[a-z]{5}$/' /usr/share/dict/words > words5.tx
