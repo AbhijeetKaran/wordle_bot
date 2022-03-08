@@ -204,12 +204,12 @@ def word_check(x,y,ma,ml,ca,cl,nal):
             nal.append(y[i])
 
         if ins == True and pos == True:
-            print(f"\033[1;42m'{y[i]}'\033[0m",end="")
+            print(f"\033[1;42m\033[1;97m {y[i]} \033[0m",end="")
             success_rate = success_rate + 1
         elif ins == True and pos == False:
-            print(f"\033[1;43m'{y[i]}'\033[0m",end="")
+            print(f"\033[1;103m\033[1;97m {y[i]} \033[0m",end="")
         else:
-            print(f"\033[1;40m'{y[i]}'\033[0m",end="")
+            print(f"\033[0;47m\033[1;97m {y[i]} \033[0m",end="")
     print()
     if success_rate == len(x):
         return True,ma,ml,ca,cl,nal
