@@ -1,7 +1,7 @@
 # wordleBot :video_game:
 ### A python based wordle game.
 
-Guess the WORDLE in six tries.
+Guess the WORDE in six tries.
 Each guess must be a valid five-letter word. Hit the enter button to submit.
 After each guess, the color of the tiles will change to show how close your guess was to the word.
 This wordle game has two modes, BOT mode check the efficiency of the algorithm used provided word lists, and GAME mode allows the user to play the game.
