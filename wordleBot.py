@@ -221,11 +221,13 @@ def word_check(x,y,ma,ml,ca,cl,nal):
 #<<Body>>
 n = int(sys.argv[1])
 mode = int(sys.argv[2])
+file1 = sys.argv[3].strip()
+file2 = sys.argv[4].strip()
 total_s = 0
 total_l = 0
 if mode == 1:
-    wl = WordList("allposiblewords.txt",n)
-    fh = open("possible_answers.txt",'r')
+    wl = WordList(file1,n)
+    fh = open(file2,'r')
     for x in fh:
         x = x.strip()
         result = wl.gameplay(x)
@@ -236,7 +238,7 @@ if mode == 1:
             total_l = total_l+1
     print(f"Total accuracy is: {round((total_s/(total_l+total_s))*100,2)}%")
 else:
-    wl = WordList("possible_answers.txt",n)
+    wl = WordList(file2,n)
     original = list(wl.randomSelector(wl.wordlist))[0]
     result = wl.gameModeplay(original)
 
