@@ -2,6 +2,7 @@ import sys
 from io import StringIO
 import numpy as np
 import pandas as pd
+import time
 
 
 class WordList:
@@ -223,6 +224,7 @@ def word_check(x,y,ma,ml,ca,cl,nal):
     return False,ma,ml,ca,cl,nal
 
 #<<Body>>
+start_time = time.time()
 n = int(sys.argv[1])
 mode = int(sys.argv[2])
 file1 = sys.argv[3].strip()
@@ -241,6 +243,10 @@ if mode == 1:
             print(f"\033[1;45m Correct word : '{x}' \033[0m\n")
             total_l = total_l+1
     print(f"Total accuracy is: {round((total_s/(total_l+total_s))*100,2)}%")
+    print(f"Total success: \033[1;42m{total_s}\033[0m/{total_l+total_s}")
+    print(f"Total fails: \033[1;41m{total_l}\033[0m/{total_l+total_s}")
+    end_time = time.time()
+    print(f"Time taken : {round(end_time-start_time,2)}")
 elif mode == 2:
     wl = WordList(file2,n)
     original = list(wl.randomSelector(wl.wordlist))[0]
