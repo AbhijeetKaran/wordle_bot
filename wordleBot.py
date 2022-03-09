@@ -134,9 +134,16 @@ class WordList:
             print(f"\033[1;31m FAILED\033[0m {trials}/{6}")
             return False
     
-    def askInput(self):
-        val = input("\033[1;36m Your guess : \033[0m")
-        return val
+    def askInput(self,n,wl):
+        while True:
+            val = input(f"\033[1;36m Your guess no. {n}: \033[0m")
+            if len(val) == 5:
+                if val not in wl:
+                    print(f"\033[1;33m Enter another 5 letter word, this word not in list.\033[0m")
+                    continue
+                return val
+            else:
+                print(f"\033[1;31m ERROR: Length of word not equal to 5, please enter a 5 letter word.\033[0m")
 
     def gameModeplay(self,original):
         wl = self.wordlist.copy()
@@ -153,7 +160,7 @@ class WordList:
         while True:
             if trials > 6:
                 break
-            predicted = self.askInput()
+            predicted = self.askInput(trials,self.wordlist)
             sucess,ma,ml,ca,cl,nal = word_check(original,predicted,ma,ml,ca,cl,nal)
             if sucess == True:
                 break
@@ -215,9 +222,6 @@ def word_check(x,y,ma,ml,ca,cl,nal):
         return True,ma,ml,ca,cl,nal
     return False,ma,ml,ca,cl,nal
 
-
-
-
 #<<Body>>
 n = int(sys.argv[1])
 mode = int(sys.argv[2])
@@ -237,9 +241,22 @@ if mode == 1:
             print(f"\033[1;45m Correct word : '{x}' \033[0m\n")
             total_l = total_l+1
     print(f"Total accuracy is: {round((total_s/(total_l+total_s))*100,2)}%")
-else:
+elif mode == 2:
     wl = WordList(file2,n)
     original = list(wl.randomSelector(wl.wordlist))[0]
     result = wl.gameModeplay(original)
-
+elif mode == 3:
+    wl = WordList(file1,n)
+    while True:
+        original = input(f"\033[1;36m Enter word to be predicted: \033[0m")
+        if len(original) == 5:
+            if original not in wl.wordlist:
+                print(f"\033[1;33m Enter another 5 letter word.\033[0m")
+                continue
+            break
+        else:
+            print(f"\033[1;31m ERROR: Length of word not equal to 5, please enter a 5 letter word.\033[0m")
+    result = wl.gameplay(original)
+else:
+    print(f"\033[1;31mERROR!!! Invalid mode Number\033[0m")
 # perl -nle 'print if /^[a-z]{5}$/' /usr/share/dict/words > words5.tx
