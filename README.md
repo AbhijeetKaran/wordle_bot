@@ -4,7 +4,10 @@
 Guess the WORDE in six tries.
 Each guess must be a valid five-letter word. Hit the enter button to submit.
 After each guess, the color of the tiles will change to show how close your guess was to the word.
-This wordle game has three modes, **BOT mode** check the efficiency of the algorithm uses provided word lists, **GAME mode** allows the user to play the game, **TEST mode** allows user to test wordleBot to test a valid five letter word from the provided word list.
+This wordle game has three modes, 
+ - **BOT mode** check the efficiency of the algorithm uses provided word lists
+ - **GAME mode** allows the user to play the game
+ - **TEST mode** allows user to test wordleBot to test a valid five letter word from the provided word list.
 
 ## USAGE:
 ```bash
